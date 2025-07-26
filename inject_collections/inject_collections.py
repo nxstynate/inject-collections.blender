@@ -1,9 +1,9 @@
 bl_info = {
-    "name": "Batch Collection Link Injector",
-    "author": "ChatGPT + Nate Lewis",
-    "version": (1, 0, 13),
+    "name": "Inject Collections",
+    "author": "NXSTYNATE",
+    "version": (0, 5, 0),
     "blender": (4, 5, 0),
-    "description": "Batch inject collections from a source .blend into target files matching a file pattern in each project folder.",
+    "description": "Injects / pushes collections from a source file into target files.",
     "category": "Object",
 }
 
