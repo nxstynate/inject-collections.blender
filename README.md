@@ -4,7 +4,7 @@
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Status](https://img.shields.io/badge/Status-Beta-red.svg)
 
-![Screenshot 2025-07-26 123547.png](images/Screenshot%202025-07-26%20123547.png)
+![header_image.png](images/header_image.png)
 
 This Blender addon, "Batch Collection Link Injector," is designed to streamline the process of linking collections from a source `.blend` file into multiple target `.blend` files. It's particularly useful for projects where you need to inject a set of standard collections (like characters, props, or environments) into many different scene files, especially when dealing with a large number of files or a complex directory structure.
 
