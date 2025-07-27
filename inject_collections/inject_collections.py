@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Inject Collections",
     "author": "NXSTYNATE",
-    "version": (0, 5, 1),
+    "version": (0, 5, 0),
     "blender": (4, 5, 0),
     "description": "Injects / pushes collections from a source file into target files.",
     "category": "Object",
@@ -278,7 +278,7 @@ class BATCH_OT_inject_collections(Operator):
                     log_prefix = "[Dry Run]" if sc.dry_run else ""
                     
                     if sc.dry_run:
-                        msg = f"{log_prefix} Would inject {target_collections} into {os.path.basename(target_path)}"
+                        msg = f"{log_prefix} Would inject {target_collections} into {os.path.basename(target_path)} [{target_subdir}]"
                         sc.log_list.add().message = msg
                     else:
                         # Create a temporary Python script file
@@ -300,14 +300,14 @@ class BATCH_OT_inject_collections(Operator):
                                 match = re.search(r'Successfully created (\d+) collection instances', result.stdout)
                                 if match:
                                     count = match.group(1)
-                                    msg = f"✓ Created {count} collection instances in {os.path.basename(target_path)}"
+                                    msg = f"✓ Created {count} collection instances in {os.path.basename(target_path)} [{target_subdir}]"
                                 else:
-                                    msg = f"✓ Completed linking to {os.path.basename(target_path)}"
+                                    msg = f"✓ Completed linking to {os.path.basename(target_path)} [{target_subdir}]"
                             else:
-                                msg = f"Completed linking to {os.path.basename(target_path)} (check file to verify)"
+                                msg = f"Completed linking to {os.path.basename(target_path)} [{target_subdir}] (check file to verify)"
                                 
                         except subprocess.CalledProcessError as e:
-                            msg = f"✗ Error linking into {os.path.basename(target_path)}: {e}"
+                            msg = f"✗ Error linking into {os.path.basename(target_path)} [{target_subdir}]: {e}"
                         finally:
                             # Clean up temporary script file
                             try:
