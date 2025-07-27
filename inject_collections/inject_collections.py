@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Inject Collections",
     "author": "NXSTYNATE",
-    "version": (0, 5, 0),
+    "version": (0, 5, 1),
     "blender": (4, 5, 0),
     "description": "Injects / pushes collections from a source file into target files.",
     "category": "Object",
@@ -175,10 +175,6 @@ class BATCH_OT_inject_collections(Operator):
             wm = context.window_manager
             wm.progress_begin(0, total)
             
-            # Add debug message
-            sc.log_list.add().message = f"DEBUG: Starting injection process with {len(matches)} matches and {len(targets)} targets"
-            sc.log_list.add().message = f"DEBUG: Root directory: {sc.root_dir}"
-            
             # Create a mapping of subdirectory names to their matched collections
             subdir_to_collections = {}
             for match in matches:
@@ -187,11 +183,6 @@ class BATCH_OT_inject_collections(Operator):
                         subdir_to_collections[match.subdir_name] = []
                     subdir_to_collections[match.subdir_name].append(match.collection_name)
             
-            # Show the mapping for debugging
-            sc.log_list.add().message = "DEBUG: Subdirectory to Collections mapping:"
-            for subdir, colls in subdir_to_collections.items():
-                sc.log_list.add().message = f"  {subdir} → {colls}"
-            
             # Fix Blender executable path for Windows
             blender_exec = sys.executable
             if sys.platform == 'win32':
@@ -199,7 +190,6 @@ class BATCH_OT_inject_collections(Operator):
                 blender_exec = os.path.expanduser('~/programs/Blender4.5/blender.exe')
                 # Check if the executable exists, otherwise fall back to sys.executable
                 if not os.path.exists(blender_exec):
-                    sc.log_list.add().message = f"Warning: Blender executable not found at {blender_exec}, using {sys.executable}"
                     blender_exec = sys.executable
             
             # Process each target file
@@ -207,15 +197,9 @@ class BATCH_OT_inject_collections(Operator):
                 try:
                     target_path = target.path
                     
-                    sc.log_list.add().message = f"\nDEBUG: Processing target {idx+1}/{total}: {os.path.basename(target_path)}"
-                    sc.log_list.add().message = f"DEBUG: Full target path: {target_path}"
-                    
                     # Normalize the target path for comparison
                     normalized_target = os.path.normpath(target_path).replace('\\', '/')
                     normalized_root = os.path.normpath(sc.root_dir).replace('\\', '/')
-                    
-                    sc.log_list.add().message = f"DEBUG: Normalized target: {normalized_target}"
-                    sc.log_list.add().message = f"DEBUG: Normalized root: {normalized_root}"
                     
                     # Find which root subdirectory this target file belongs to
                     target_collections = []
@@ -226,17 +210,11 @@ class BATCH_OT_inject_collections(Operator):
                         subdir_full_path = os.path.join(sc.root_dir, subdir_name)
                         normalized_subdir = os.path.normpath(subdir_full_path).replace('\\', '/')
                         
-                        sc.log_list.add().message = f"DEBUG: Checking if target is in '{subdir_name}'"
-                        sc.log_list.add().message = f"DEBUG: Subdir path: {normalized_subdir}"
-                        
                         # Check if the target file is within this subdirectory
                         if normalized_target.startswith(normalized_subdir + '/') or normalized_target.startswith(normalized_subdir):
                             target_subdir = subdir_name
                             target_collections = subdir_to_collections[subdir_name]
-                            sc.log_list.add().message = f"DEBUG: ✓ MATCH! Target is in '{subdir_name}', will inject: {target_collections}"
                             break
-                        else:
-                            sc.log_list.add().message = f"DEBUG: ✗ No match with '{subdir_name}'"
                     
                     # Skip this target if no collections should be injected
                     if not target_collections:
@@ -252,31 +230,21 @@ class BATCH_OT_inject_collections(Operator):
                         f"source_file = r'{source}'",
                         f"collections_to_link = {repr(target_collections)}",
                         "",
-                        "print(f'Attempting to link collections: {collections_to_link}')",
-                        "print(f'From source file: {source_file}')",
-                        "",
                         "# Get the filename for the designated collection",
                         "current_filename = os.path.basename(bpy.data.filepath)",
                         "designated_collection_name = f'.\\\\{current_filename}'",
-                        "print(f'Looking for designated collection: {designated_collection_name}')",
                         "",
                         "# Find the designated collection",
                         "designated_collection = bpy.data.collections.get(designated_collection_name)",
                         "if designated_collection:",
-                        "    print(f'Found designated collection: {designated_collection_name}')",
                         "    target_collection = designated_collection",
                         "else:",
-                        "    print(f'WARNING: Designated collection not found: {designated_collection_name}')",
-                        "    print('Adding instances to scene root collection instead')",
                         "    target_collection = bpy.context.scene.collection",
                         "",
                         "# Load and link collections",
                         "with bpy.data.libraries.load(source_file, link=True) as (data_from, data_to):",
-                        "    # Show available collections in source",
-                        "    print(f'Available collections in source: {data_from.collections}')",
                         "    # Filter collections that exist in source",
                         "    available_collections = [c for c in collections_to_link if c in data_from.collections]",
-                        "    print(f'Collections to link: {available_collections}')",
                         "    data_to.collections = available_collections",
                         "",
                         "# Create collection instances",
@@ -288,7 +256,6 @@ class BATCH_OT_inject_collections(Operator):
                         "        for obj in target_collection.objects:",
                         "            if obj.instance_type == 'COLLECTION' and obj.instance_collection == coll:",
                         "                instance_exists = True",
-                        "                print(f'Instance already exists for: {coll.name}')",
                         "                break",
                         "        ",
                         "        if not instance_exists:",
@@ -300,15 +267,12 @@ class BATCH_OT_inject_collections(Operator):
                         "                # Link the instance to the target collection",
                         "                target_collection.objects.link(instance)",
                         "                linked_count += 1",
-                        "                print(f'Successfully created instance for: {coll.name} in {target_collection.name}')",
                         "            except Exception as e:",
-                        "                print(f'Error creating instance for {coll.name}: {e}')",
+                        "                pass",
                         "",
                         "# Save the file",
                         "bpy.ops.wm.save_mainfile()",
                         "print(f'Successfully created {linked_count} collection instances')",
-                        "if not designated_collection:",
-                        "    print('WARNING: Instances were added to scene root instead of designated collection')",
                     ]
                     
                     log_prefix = "[Dry Run]" if sc.dry_run else ""
@@ -329,13 +293,6 @@ class BATCH_OT_inject_collections(Operator):
                             # Capture output for debugging
                             result = subprocess.run(cmd, capture_output=True, text=True, check=True)
                             
-                            # Parse the output to see what happened
-                            if result.stdout:
-                                sc.log_list.add().message = "DEBUG: Script output:"
-                                for line in result.stdout.split('\n'):
-                                    if line.strip():
-                                        sc.log_list.add().message = f"  {line.strip()}"
-                            
                             # Check for success
                             if "Successfully created" in result.stdout:
                                 # Extract number of linked collection instances
@@ -351,10 +308,6 @@ class BATCH_OT_inject_collections(Operator):
                                 
                         except subprocess.CalledProcessError as e:
                             msg = f"✗ Error linking into {os.path.basename(target_path)}: {e}"
-                            if e.stderr:
-                                sc.log_list.add().message = f"Error details: {e.stderr}"
-                            if e.stdout:
-                                sc.log_list.add().message = f"Output: {e.stdout}"
                         finally:
                             # Clean up temporary script file
                             try:
@@ -365,19 +318,15 @@ class BATCH_OT_inject_collections(Operator):
                         sc.log_list.add().message = msg
                         
                 except Exception as e:
-                    sc.log_list.add().message = f"ERROR in target loop: {str(e)} at line {e.__traceback__.tb_lineno}"
-                    import traceback
-                    sc.log_list.add().message = f"Traceback: {traceback.format_exc()}"
+                    sc.log_list.add().message = f"ERROR: {str(e)}"
                 
                 wm.progress_update(idx + 1)
             
             wm.progress_end()
-            sc.log_list.add().message = "\nDEBUG: Injection process completed!"
+            sc.log_list.add().message = "Injection process completed!"
             
         except Exception as e:
-            sc.log_list.add().message = f"ERROR in main execute: {str(e)} at line {e.__traceback__.tb_lineno}"
-            import traceback
-            sc.log_list.add().message = f"Full traceback: {traceback.format_exc()}"
+            sc.log_list.add().message = f"ERROR: {str(e)}"
             return {'CANCELLED'}
             
         return {'FINISHED'}
