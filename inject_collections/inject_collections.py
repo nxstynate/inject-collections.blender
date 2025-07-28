@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Inject Collections",
     "author": "NXSTYNATE",
-    "version": (0, 5, 0),
+    "version": (0, 5, 1),
     "blender": (4, 5, 0),
     "description": "Injects / pushes collections from a source file into target files.",
     "category": "Object",
@@ -333,11 +333,11 @@ class BATCH_OT_inject_collections(Operator):
 
 # Panel
 class BATCH_PT_panel(Panel):
-    bl_label = "Batch Collection Link Injector"
+    bl_label = "Inject Collections"
     bl_idname = "BATCH_PT_panel"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'Batch Linker'
+    bl_category = 'Inject Collections'
 
     def draw(self, context):
         layout = self.layout
